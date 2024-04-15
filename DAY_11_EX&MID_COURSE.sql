@@ -14,15 +14,49 @@ LEFT JOIN texts
   ON emails.email_id = texts.email_id
   AND texts.signup_action = 'Confirmed';
 --EX03
+SELECT 
+    age.age_bucket,
+    ROUND(SUM(CASE WHEN activities.activity_type = 'send' THEN activities.time_spent ELSE 0 END) / SUM(activities.time_spent) * 100.0, 2) AS send_perc,
+    ROUND(SUM(CASE WHEN activities.activity_type = 'open' THEN activities.time_spent ELSE 0 END) / SUM(activities.time_spent) * 100.0, 2) AS open_perc
+FROM activities
+INNER JOIN age_breakdown AS age ON activities.user_id = age.user_id
+WHERE activities.activity_type IN ('send', 'open')
+GROUP BY age.age_bucket;
 --EX04
+SELECT C.customer_id
+FROM customer_contracts AS C
+LEFT JOIN products AS P 
+ON C.product_id = P.product_id
+GROUP BY C.customer_id
+HAVING COUNT(DISTINCT p.product_category) = (SELECT COUNT(DISTINCT product_category) FROM products);
+
+--EX05
+  SELECT
+    emp1.employee_id,
+    emp1.name,
+    COUNT(emp2.employee_id) AS reports_count,
+    ROUND(AVG(emp2.age)) AS average_age
+FROM Employees emp1
+INNER JOIN Employees emp2 ON emp1.employee_id = emp2.reports_to
+GROUP BY emp1.name,emp1.employee_id
+ORDER BY emp1.employee_id
+--EX06
+SELECT P.product_name, 
+SUM(O.unit) AS unit
+FROM Products AS P
+INNER JOIN Orders AS O
+ON P.product_id=O.product_id
+WHERE O.order_date BETWEEN '2020-02-01' AND '2020-02-29'
+GROUP BY P.product_name
+HAVING SUM(O.unit)>= 100
+--EX07
 SELECT a.page_id
 FROM pages as a
 LEFT JOIN page_likes as b
 ON a.page_id = b.page_id
 WHERE b.liked_date IS NULL
 ORDER BY  a.page_id
---EX05
-  
+	
 -----------------------------------MID---------COURSE----------TESTING---------------------------
 --EX01:
 SELECT distinct film_id, sum(replacement_cost) as total_replacement_cost
