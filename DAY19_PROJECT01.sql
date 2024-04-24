@@ -180,7 +180,9 @@ order by quantityordered
 
 select * from SALES_DATASET_RFM_PRJ
 where 
+-- 6. Sau khi làm sạch dữ liệu, hãy lưu vào bảng mới  tên là SALES_DATASET_RFM_PRJ_CLEAN
 
+create table SALES_DATASET_RFM_PRJ_CLEAN as (select * from SALES_DATASET_RFM_PRJ);
 
 
 
