@@ -49,4 +49,50 @@ JOIN
   bigquery-public-data.thelook_ecommerce.products p ON ls.Product_category = p.category 
 GROUP BY 
   month, year, Product_category, TPV, TPO, Lagged_TPV, Lagged_TPO;
+--retention cohort analysis
+with a as(
+  select
+    user_id,
+    format_date('%Y-%m',first_purchase_date) as cohort_date,
+    created_at,
+    (extract(year from created_at)-extract(year from first_purchase_date ))*12
+    + (extract(month from created_at)-extract(month from first_purchase_date))+1 as index
+  from (
+  select
+    user_id,
+    min(created_at) over(partition by user_id) as first_purchase_date,
+    created_at,
+    from bigquery-public-data.thelook_ecommerce.order_items
+  ) b
+),
+xxx as (
+  select 
+        cohort_date,
+        index,
+        count(distinct user_id) as total_user,
+  from a 
+  group by cohort_date, index
+), user_cohort as(
+select
+  cohort_date,
+  sum(case when index=1 then total_user else 0 end) as index_0,
+  sum(case when index=2 then total_user else 0 end) as index_1,
+  sum(case when index=3 then total_user else 0 end) as index_2,
+  sum(case when index=4 then total_user else 0 end) as index_3,
+  
+from xxx
+group by cohort_date
+order by cohort_date)
+--retention_cohort
+select cohort_date,
+
+round(100.00*index_0/index_0,2) || '%' as Zero,
+round(100.00*index_1/index_0,2) || '%' as First,
+round(100.00*index_2/index_0,2) || '%' as Second,
+round(100.00*index_3/index_0,2) || '%' as Third,
+from user_cohort
+--insight:
+-- Nhìn chung số khách hàng quay trở lại sẽ tập trung những tháng cuối năm
+-- Có sự tiến triển theo từng năm số khách hàng quay trở lại
+
 
