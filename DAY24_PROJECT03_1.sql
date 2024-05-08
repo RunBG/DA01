@@ -163,9 +163,36 @@ where country='UK'
 group by year_id, productline
 select * from segment_score
 select * from sales_dataset_rfm_prj_clean
-select 
+--RFM
+with customer_rfm as(
+	select 
+		customername,
 		current_date-MAX(orderdate) as R,
-		count(distinct customername) as F,
+		count(customername) as F,
+		sum(sales) as M
+from sales_dataset_rfm_prj_clean
+group by customername
+),
+rfm_score as(
+--Chia thành các khoảng 1-5
+select 
+		customername,
+		ntile(5) over(order by R desc) as R_score,
+		ntile(5) over(order by F ) as F_score,
+		ntile(5) over(order by M ) as M_score
+from customer_rfm
+),rfm_final as(
+---Phân nhóm
+select customername,
+concat(R_score,F_score,M_score) as rfm_score
+from rfm_score)
+select 
+from rfm_final a
+join segment_score b on b.rfm_score=b.scores
+
+
+
+		
 		
 		
 
